@@ -1,0 +1,8 @@
+Simple file transfer program using C sockets
+WIP
+
+Usage:
+transfer -s "path/to/file"
+transfer -c "HOST IP"
+
+DPO Sun 22 Apr 2012 04:59:05 BST
