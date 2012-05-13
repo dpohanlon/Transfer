@@ -29,7 +29,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-
+#include <unistd.h>
 
 void *filladdrinfos(struct addrinfo *);
 
