@@ -36,7 +36,7 @@ extern int errno; // Used for general error codes
 
 int client(char *host_ip)
 {
-	struct addrinfo *servinfo;
+	struct addrinfo *servinfo = 0;
 	int sockfd = 0;
 
 	int connect_status = 0;

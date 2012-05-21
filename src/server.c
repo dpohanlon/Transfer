@@ -27,7 +27,8 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <unistd.h>
-
+#include <pthread.h>
+ 
 #include "server.h"
 
 const int backlog = 5; // Max 5 set by kernel ?
@@ -39,7 +40,7 @@ extern int kb_size;
 
 int server(char *filename)
 {
-	struct addrinfo *servinfo;
+	struct addrinfo *servinfo = 0;
 
 	struct sockaddr_storage client_addr;
 	socklen_t addr_size = sizeof client_addr;
@@ -141,9 +142,9 @@ int sendf(int clientfd, char *buffer, int lSize){
 int runserv(int clientfd, int clients, struct sockaddr_storage client_addr, 
 								char *buffer, char *filename, long lSize){
 	char peeripstr[INET_ADDRSTRLEN];
-	char reqmsg[100]={0};
-	char lSizea[100]={0};
-	char response[1]={0};
+	char reqmsg[100] = {0};
+	char lSizea[100] = {0};
+	char response[1] = {0};
 	int msentlen = 0;
 	int dsentlen = 0;
 
@@ -165,7 +166,7 @@ int runserv(int clientfd, int clients, struct sockaddr_storage client_addr,
 
 	recv(clientfd, response, 10, 0);
 
-	if (strncmp(&response[0], "Y", 1)==0){
+	if (strncmp(&response[0], "Y", 1) == 0){
 		printf("Request accepted. Sending file....\n");
 
 		dsentlen = sendf(clientfd, buffer, lSize);

@@ -1,4 +1,4 @@
-CC=gcc
+CC=clang
 CFLAGS=-Wall -g -O2
 
 SOURCES=$(wildcard src/*.c)
@@ -12,7 +12,7 @@ $(TARGET): build $(OBJECTS)
 	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET)
 
 clean:
-	rm -rf bin/*
+	rm -rf bin
 	rm src/*.o
 
 build:
