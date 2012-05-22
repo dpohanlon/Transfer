@@ -179,6 +179,9 @@ int runclient(int sockfd){
 	else {
 		printf("File transfer rejected.\n");
 	}
+
+	while(1){int i; i++;}
+
 	close(sockfd);
 
 	return 0;

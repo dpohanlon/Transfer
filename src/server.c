@@ -33,15 +33,11 @@
 
 const int backlog = 5; // Max 5 set by kernel ?
 const int opttrue = 1;
+const int nthreads = 5;
 
 extern int errno;
 extern int port;
 extern int kb_size;
-
-/*
-int clientfd, int client, struct sockaddr_storage client_addr, 
-char *buffer, char *filename, long lSize
-*/
 
 struct server_data
 {
@@ -61,16 +57,18 @@ int server(char *filename)
 	struct sockaddr_storage client_addr;
 	socklen_t addr_size = sizeof client_addr;
 
-	struct server_data thread_arg;
+	struct server_data thread_arg[nthreads];
 
 	int sockfd = 0;
-	int clientfd = 0;
+	int clientfd[nthreads];
 	int client = 0;
 
-	pthread_t thread;
+	pthread_t thread[nthreads];
 
 	long lSize = 0;
   	char * buffer;
+
+  	int i = 0;
 
 	FILE *file;
 	if((file = fopen(filename, "rb"))==NULL){
@@ -114,32 +112,33 @@ int server(char *filename)
 /*
 	Fill struct with thread arguments
 */
-	thread_arg.client_addr = client_addr;
-	thread_arg.buffer = buffer;
-	thread_arg.filename = filename;
-	thread_arg.lSize = lSize;
-	thread_arg.thread_flag = 0;
+
+	for (i = 0; i < nthreads; ++i){
+		thread_arg[i].client_addr = client_addr;
+		thread_arg[i].buffer = buffer;
+		thread_arg[i].filename = filename;
+		thread_arg[i].lSize = lSize;
+		thread_arg[i].thread_flag = 0;
+	}
 
 /*
 	Accept an incoming connection	
 */	
 
-	//while(1){
-		if ((clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
-			client++;
+	while(1){
+		if ((clientfd[client] = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
 
-			thread_arg.clientfd = clientfd;
-			thread_arg.client = client;
+			thread_arg[client].clientfd = clientfd[client];
+			thread_arg[client].client = client;
 
-			pthread_create(&thread, NULL, runserv, (void *)&thread_arg);
+			pthread_create(&thread[client], NULL, runserv, (void *)&thread_arg[client]);
 
-			//runserv((void *)&thread_arg);
+			pthread_join(thread[client], NULL);
 
-			pthread_join(thread, NULL);
-
-			close(clientfd);
+		//	close(clientfd[client]);
 		}
-	//}
+		client++;
+	}
 /*
 	Free our servinfo, and other assorted allocated goodies
 */
