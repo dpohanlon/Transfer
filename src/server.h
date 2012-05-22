@@ -35,7 +35,7 @@ void *filladdrinfos(struct addrinfo *);
 
 int sendf(int, char *, int); // Already an implementation in socket.h
 
-int runserv(int, int, struct sockaddr_storage, char *, char *, long);
+void *runserv(void *arg);
 
 int makeserv(struct addrinfo *);
 

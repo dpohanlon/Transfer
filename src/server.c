@@ -38,6 +38,22 @@ extern int errno;
 extern int port;
 extern int kb_size;
 
+/*
+int clientfd, int client, struct sockaddr_storage client_addr, 
+char *buffer, char *filename, long lSize
+*/
+
+struct server_data
+{
+	int clientfd;
+	int client;
+	struct sockaddr_storage client_addr;
+	char *buffer;
+	char *filename;
+	long lSize;
+	int thread_flag;
+};
+
 int server(char *filename)
 {
 	struct addrinfo *servinfo = 0;
@@ -45,9 +61,13 @@ int server(char *filename)
 	struct sockaddr_storage client_addr;
 	socklen_t addr_size = sizeof client_addr;
 
+	struct server_data thread_arg;
+
 	int sockfd = 0;
 	int clientfd = 0;
-	int clients = 0;
+	int client = 0;
+
+	pthread_t thread;
 
 	long lSize = 0;
   	char * buffer;
@@ -90,23 +110,40 @@ int server(char *filename)
 
 	printf("Listening on port: %i \n",port);
 
-	clients = 0;
+	client = 0;
 /*
-Accept an incoming connection	
+	Fill struct with thread arguments
+*/
+	thread_arg.client_addr = client_addr;
+	thread_arg.buffer = buffer;
+	thread_arg.filename = filename;
+	thread_arg.lSize = lSize;
+	thread_arg.thread_flag = 0;
+
+/*
+	Accept an incoming connection	
 */	
-	if ((clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
-		clients++;
-		if(runserv(clientfd, clients, client_addr, buffer, filename, lSize)==0){
-			printf("Client %i closing connection.\n", clients); // In runserv? fork
+
+	//while(1){
+		if ((clientfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
+			client++;
+
+			thread_arg.clientfd = clientfd;
+			thread_arg.client = client;
+
+			pthread_create(&thread, NULL, runserv, (void *)&thread_arg);
+
+			//runserv((void *)&thread_arg);
+
+			pthread_join(thread, NULL);
+
+			close(clientfd);
 		}
-		else{
-			printf("Client %i request denied. Closing connection.\n", clients);
-		}
-		close(clientfd);
-	}
+	//}
 /*
 	Free our servinfo, and other assorted allocated goodies
 */
+
 	close(sockfd);
 	freeaddrinfo(servinfo);
 	free(buffer);
@@ -137,10 +174,9 @@ int sendf(int clientfd, char *buffer, int lSize){
 	return dsentlen;
 }
 
-// CLIENTS -> parallel?
+// client -> parallel?
 
-int runserv(int clientfd, int clients, struct sockaddr_storage client_addr, 
-								char *buffer, char *filename, long lSize){
+void *runserv(void *arg){
 	char peeripstr[INET_ADDRSTRLEN];
 	char reqmsg[100] = {0};
 	char lSizea[100] = {0};
@@ -148,11 +184,23 @@ int runserv(int clientfd, int clients, struct sockaddr_storage client_addr,
 	int msentlen = 0;
 	int dsentlen = 0;
 
+	struct server_data *local_data;
+
+	local_data = (struct server_data *)arg;
+
+	int clientfd = (int)local_data->clientfd;
+	int client = (int)local_data->client;
+	struct sockaddr_storage client_addr = (struct sockaddr_storage)local_data->client_addr;
+	char *buffer = (char *)local_data->buffer;
+	char *filename = (char *)local_data->filename;
+	long lSize = (long)local_data->lSize;
+	int thread_flag = (int)local_data->thread_flag;
+
 	struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&client_addr;
 	int ipAddr = pV4Addr->sin_addr.s_addr;		
 	inet_ntop(AF_INET, &ipAddr, peeripstr, sizeof peeripstr); 
 
-	printf("Client %i connected from %s.\n",clients, peeripstr);
+	printf("Client %i connected from %s.\n",client, peeripstr);
 
 	snprintf(lSizea, 100, "%li",lSize);
 
@@ -163,7 +211,7 @@ int runserv(int clientfd, int clients, struct sockaddr_storage client_addr,
 	printf("Requesting to send file '%s' (%li) \n", filename, lSize);
 
 	msentlen = send(clientfd, reqmsg, sizeof reqmsg, 0);
-
+	printf("%s\n", reqmsg);
 	recv(clientfd, response, 10, 0);
 
 	if (strncmp(&response[0], "Y", 1) == 0){
@@ -173,9 +221,12 @@ int runserv(int clientfd, int clients, struct sockaddr_storage client_addr,
 
 		printf("Sent %i bytes, %g%%\n",dsentlen, ((float)dsentlen/(float)lSize)*100);
 
-		return 0;
+		thread_flag = 0;
 	}
-	return 1;
+
+	thread_flag = 1;
+
+	return NULL;
 }
 
 void *filladdrinfos(struct addrinfo *servinfo){
