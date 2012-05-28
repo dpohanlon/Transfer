@@ -63,7 +63,8 @@ int client(char *host_ip)
 	return 0;
 }
 
-void *filladdrinfoc(char *host_ip, struct addrinfo *servinfo){
+void *filladdrinfoc(char *host_ip, struct addrinfo *servinfo)
+{
 	int status = 0;
 	struct addrinfo hints;
 	char port_a[8] = {0};
@@ -88,7 +89,8 @@ void *filladdrinfoc(char *host_ip, struct addrinfo *servinfo){
 	return servinfo;
 }
 
-long recvf(int sockfd, long filesize, char *rec_buffer, char *file_buffer){
+long recvf(int sockfd, long filesize, char *rec_buffer, char *file_buffer)
+{
 	long dreclentot = 0;
 	int dreclen = 0;
 	long remaining_bytes = 0;
@@ -122,7 +124,8 @@ long recvf(int sockfd, long filesize, char *rec_buffer, char *file_buffer){
 	return dreclentot;
 }
 
-int runclient(int sockfd){
+int runclient(int sockfd)
+{
 	long filesize = 0;
 	char *filename;
 	char reqmsg[100];

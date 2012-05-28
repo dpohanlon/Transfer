@@ -154,7 +154,8 @@ int server(char *filename)
 	return 0;
 }
 
-int sendf(int clientfd, char *buffer, int lSize){
+int sendf(int clientfd, char *buffer, int lSize)
+{
 	int dsentlen = 0;
 	int packet = 0;
 	int remaining_bytes = 0;
@@ -175,7 +176,8 @@ int sendf(int clientfd, char *buffer, int lSize){
 	return dsentlen;
 }
 
-void *runserv(void *arg){
+void *runserv(void *arg)
+{
 	char peeripstr[INET_ADDRSTRLEN];
 	char reqmsg[100] = {0};
 	char lSizea[100] = {0};
@@ -229,7 +231,8 @@ void *runserv(void *arg){
 	return NULL;
 }
 
-void *filladdrinfos(struct addrinfo *servinfo){
+void *filladdrinfos(struct addrinfo *servinfo)
+{
 	int status = 0;
 	struct addrinfo hints;
 	char port_a[8] = {0};
@@ -256,7 +259,8 @@ void *filladdrinfos(struct addrinfo *servinfo){
 	return servinfo; // Pointer, servinfo modified
 }
 
-int makeserv(struct addrinfo *servinfo){
+int makeserv(struct addrinfo *servinfo)
+{
 	int sockfd;
 	if((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol))==-1){
 		fprintf(stderr, "Socket error: %i\n", errno);
