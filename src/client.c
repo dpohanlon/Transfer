@@ -180,8 +180,6 @@ int runclient(int sockfd){
 		printf("File transfer rejected.\n");
 	}
 
-	while(1){int i; i++;}
-
 	close(sockfd);
 
 	return 0;

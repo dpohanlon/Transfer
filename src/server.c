@@ -53,21 +53,16 @@ struct server_data
 int server(char *filename)
 {
 	struct addrinfo *servinfo = 0;
-
 	struct sockaddr_storage client_addr;
-	socklen_t addr_size = sizeof client_addr;
-
 	struct server_data thread_arg[nthreads];
+	socklen_t addr_size = sizeof client_addr;
 
 	int sockfd = 0;
 	int clientfd[nthreads];
 	int client = 0;
-
 	pthread_t thread[nthreads];
-
 	long lSize = 0;
   	char * buffer;
-
   	int i = 0;
 
 	FILE *file;
@@ -125,19 +120,19 @@ int server(char *filename)
 	Accept an incoming connection	
 */	
 
-	while(1){
+	while(client < nthreads){
 		if ((clientfd[client] = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
 
 			thread_arg[client].clientfd = clientfd[client];
 			thread_arg[client].client = client;
 
 			pthread_create(&thread[client], NULL, runserv, (void *)&thread_arg[client]);
-
-			pthread_join(thread[client], NULL);
-
-		//	close(clientfd[client]);
 		}
 		client++;
+	}
+
+	for (i = 0; i < nthreads; ++i){
+		pthread_join(thread[i], NULL);
 	}
 /*
 	Free our servinfo, and other assorted allocated goodies
@@ -149,8 +144,6 @@ int server(char *filename)
 
 	return 0;
 }
-
-// packets?
 
 int sendf(int clientfd, char *buffer, int lSize){
 	int dsentlen = 0;
@@ -172,8 +165,6 @@ int sendf(int clientfd, char *buffer, int lSize){
 	}
 	return dsentlen;
 }
-
-// client -> parallel?
 
 void *runserv(void *arg){
 	char peeripstr[INET_ADDRSTRLEN];
@@ -224,6 +215,7 @@ void *runserv(void *arg){
 	}
 
 	thread_flag = 1;
+	close(clientfd);
 
 	return NULL;
 }

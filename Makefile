@@ -1,15 +1,16 @@
-CC=clang
-CFLAGS=-Wall -g -O2
+CC = clang
+CFLAGS = -Wall -g -O2
+LDFLAGS = -pthread
 
-SOURCES=$(wildcard src/*.c)
-OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
+SOURCES = $(wildcard src/*.c)
+OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
-TARGET=bin/transfer
+TARGET = bin/transfer
 
 all: $(TARGET)
 
 $(TARGET): build $(OBJECTS) 
-	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET)
+	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS)
 
 clean:
 	rm -rf bin
