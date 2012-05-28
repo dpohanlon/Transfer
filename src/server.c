@@ -109,30 +109,39 @@ int server(char *filename)
 */
 
 	for (i = 0; i < nthreads; ++i){
+		memset(&thread_arg[i], 0, sizeof(thread_arg[i]));
 		thread_arg[i].client_addr = client_addr;
 		thread_arg[i].buffer = buffer;
 		thread_arg[i].filename = filename;
 		thread_arg[i].lSize = lSize;
-		thread_arg[i].thread_flag = 0;
 	}
 
 /*
-	Accept an incoming connection	
+	Accept an incoming connection -> 5 in parallel
 */	
+	while(1){
+		while(client < nthreads){
+			if ((clientfd[client] = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
 
-	while(client < nthreads){
-		if ((clientfd[client] = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size))){
+				thread_arg[client].clientfd = clientfd[client];
+				thread_arg[client].client = client;
 
-			thread_arg[client].clientfd = clientfd[client];
-			thread_arg[client].client = client;
-
-			pthread_create(&thread[client], NULL, runserv, (void *)&thread_arg[client]);
+				pthread_create(&thread[client], NULL, runserv, (void *)&thread_arg[client]);
+			}
+			client++;
 		}
-		client++;
-	}
 
-	for (i = 0; i < nthreads; ++i){
-		pthread_join(thread[i], NULL);
+		for (i = 0; i < nthreads; ++i){
+			pthread_join(thread[i], NULL);
+		}
+		client = 0;
+		for (i = 0; i < nthreads; ++i){
+			memset(&thread_arg[i], 0, sizeof(thread_arg[i]));
+			thread_arg[i].client_addr = client_addr;
+			thread_arg[i].buffer = buffer;
+			thread_arg[i].filename = filename;
+			thread_arg[i].lSize = lSize;
+		}
 	}
 /*
 	Free our servinfo, and other assorted allocated goodies
